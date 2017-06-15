@@ -21,3 +21,5 @@ const sequelize = new Sequelize('database', 'username', 'password', {
 const sequelize = new Sequelize('postgres://user:pass@example.com:5432/dbname');
 ```
 sequelize 构造函数option选项还有更多设置，参考 [详细文档](http://docs.sequelizejs.com/class/lib/sequelize.js~Sequelize.html)
+
+[page](./tt.md);
