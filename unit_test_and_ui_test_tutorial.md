@@ -26,3 +26,9 @@
 
 先下载[示例代码](https://koenig-media.raywenderlich.com/uploads/2016/12/Starters.zip),里面包括两部分 **BullsEye** 和 **HalfTunes**
 **BullsEye** 继承自 [**iOS Apprentice**](https://www.raywenderlich.com/store/ios-apprentice) 应用
+
+
+## 假的测试数据和模拟交互
+
+这部分讲 你从网络接收到数据的测试 和 **userdefaults**、**CloudKit** 的操作正确性测试。
+
