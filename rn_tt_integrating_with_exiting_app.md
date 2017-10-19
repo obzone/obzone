@@ -72,5 +72,108 @@ app首页是一个列表，展示所有Mixers，点击每一个会跳转到详�
 
 ## 创建一个单页面
 
+在 *js* 目录下 创建一个名称为 **index.io.js** 的文件，添加如下内容
+
+	'use strict';
+	// 1
+	import React from 'react';
+	import ReactNative, {
+	  AppRegistry,
+	  StyleSheet,
+	  Text,
+	  View,
+	} from 'react-native';
+	
+	// 2
+	const styles = StyleSheet.create({
+	  container: {
+	    flex: 1,
+	    justifyContent: 'center',
+	    alignItems: 'center',
+	    backgroundColor: 'green',
+	  },
+	  welcome: {
+	    fontSize: 20,
+	    color: 'white',
+	  },
+	});
+	
+	// 3
+	class AddRatingApp extends React.Component {
+	  render() {
+	    return (
+	      <View style={styles.container}>
+	        <Text style={styles.welcome}>We're live from React Native!!!</Text>
+	      </View>
+	    )
+	  }
+	}
+	
+	// 4
+	AppRegistry.registerComponent('AddRatingApp', () => AddRatingApp);
+	
+介绍一下上面代码
+
+* 首先加载 *react* 和 *react-native* 模块， [结构赋值](http://es6.ruanyifeng.com/#docs/destructuring)帮你重命名这些方法，省去了在调用这些方法时候的 **React/ReactNative** 前缀。
+* 第二部定义了用来布局UI的css样式。
+* 接下来在 *render()* 方法中定义了一个 **AddRatingApp** 组件，用来展示欢迎文字。
+* 注册 **AddRatingApp** 组件为应用的根视图。
+
+在 Xcode 中打开  **AddRatingViewController.swift** 文件，然后添加
+
+``import React`` 
+
+接下来定义一个作为 **React Native** 主视图的UI对象。
+
+``var addRatingView: RCTRootView!``
+
+然后在 **viewDidLoad()** 方法后面添加
+
+	addRatingView = RCTRootView(
+	    bundleURL: URL(string: "http://localhost:8081/index.ios.bundle?platform=ios"),
+	    moduleName: "AddRatingApp",
+	    initialProperties: nil,
+	    launchOptions: nil)
+	self.view.addSubview(addRatingView)
+
+上面这段代码通过 *APP* 的 **Bundle** 中依据 **AddRatingApp** 模块名初始化一个 **RCTRootView** 实例。
+
+最后在 **viewDidLayoutSubviews** 方法中添加下面代码来设置 *rootview* 的大小布局。
+
+``addRatingView.frame = self.view.bounds``
+
+因为苹果从iOS9开始禁用http协议下面对iOS项目进行相关设置。
+在 Xcode中，打开 **Info.plist** 文件然后进行下面操作：
+
+* 添加 **NSAppTransportSecurity** 作为一个 **Dictionary** 的key
+* 然后在 **NSAppTransportSecurity** 下面再添加一个 **NSExceptionDomains** key value也用 **Dictionary** 类型。
+* 再在 **NSExceptionDomains** 下面添加一个 **localhost** key，value 同样为 **Dictionary** 类型。
+* 然后在 **localhost** 下添加一个 **NSTemporaryExceptionAllowsInsecureHTTPLoads** key，value为YES
+
+当完成上面的操作，大概是下面这个样子：
+
+![](https://koenig-media.raywenderlich.com/uploads/2016/06/mixer-info-plist-1.png)
+
+在控制台中，工作目录切换到 js 文件夹下，执行下面命令来启动 React Native 服务
+
+``npm start`` 
+
+控制台的输入应该是下面这样：
+![](https://koenig-media.raywenderlich.com/uploads/2016/06/mixer-npm-start.png)
+	
+	Note: If you receive an error stating that none of the files are listed in global config root_files then run the following command to initialize Git: git init.
+	If you still see the same error, run the following command to initialize a watchman configuration file in the js directory: echo "{}" > .watchmanconfig：
+
+运行程序，点击一个mixer,然后在详情页点击 **Add Rating** ，如果一切正常，你会看到如下欢迎页面：
+
+![](https://koenig-media.raywenderlich.com/uploads/2016/06/mixer-bare-bones-react-native-app.png)
+
+第一次打开 app packager 加载 bundle 的时候可能会慢一点。
+
+## 开始正式的 RN 开发
+
+在 RN 项目中原生代码和js通过 [JavaScriptCore Framework](https://developer.apple.com/library/tvos/documentation/Carbon/Reference/WebKit_JavaScriptCore_Ref/index.html) 框架进行交互。
+
+![](https://koenig-media.raywenderlich.com/uploads/2016/06/mixer-theory-bridge-3.png)
 
 
