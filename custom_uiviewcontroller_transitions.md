@@ -23,3 +23,12 @@ iOS 自带一些转场动画：push，pop，cover vertically(模态弹出动画)
 
 ![](https://koenig-media.raywenderlich.com/uploads/2015/07/parts.001.jpg)
 
+### API说明
+
+等你了解了这些部分是如何共同工作的，你就发现这些组成部分其实很简单。
+
+#### Transitioning Delegate
+每一个视图控制器都会可以有一个 **transitioningDelegate** 的属性（iOS7开始）,这个属性对象遵从 **UIViewControllerTransitioningDelegate** 协议。
+当你模态弹出或者模态关闭一个视图控制器的时候，UIKit 会从 **transitioningDelegate** 对象中获取 **Animation Controller**(参照上图) 来进行动画。如果要自定义动画，你就必须要实现一个 **Transitioning delegate**（参照上个图），这个对象返回一个 **Animation Controller**(参照上图)。
+
+#### Animation Controller
