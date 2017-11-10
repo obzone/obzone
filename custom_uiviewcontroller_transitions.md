@@ -217,3 +217,99 @@ It’s important to note that it is the view controller being presented that is 
 
 ![](https://koenig-media.raywenderlich.com/uploads/2015/07/frontflip-slow.gif)
 
+## 模态关闭转场动画
+到现在为止我们已经实现了模态弹出的转场动画，接下来要实现模态关闭的转场动画。
+
+新建一个新的类：**FlipDismissAnimationController** ，继承自 *NSObject*。
+
+替换掉自动生成的内容，改成下面这种：
+
+```
+class FlipDismissAnimationController: NSObject, UIViewControllerAnimatedTransitioning {
+  
+  private let destinationFrame: CGRect
+  
+  init(destinationFrame: CGRect) {
+    self.destinationFrame = destinationFrame
+  }
+  
+  func transitionDuration(using transitionContext: UIViewControllerContextTransitioning?) -> TimeInterval {
+    return 0.6
+  }
+  
+  func animateTransition(using transitionContext: UIViewControllerContextTransitioning) {
+    
+  }
+}
+```
+这个新创建的 **Animation Controller**类 做与模态关闭动画，与模态弹出动画相对。需要完成以下几个步骤：
+
+* 缩小正在展示的视图控制器的大小，回到卡片大小（destinationFrame）保存这个值。
+* 翻转正在展示的view到卡片。
+
+添加下面代码到 **animateTransition(using:)** 方法下面：
+
+```
+// 1
+guard let fromVC = transitionContext.viewController(forKey: .from),
+  let toVC = transitionContext.viewController(forKey: .to),
+  let snapshot = fromVC.view.snapshotView(afterScreenUpdates: false)
+  else {
+    return
+}
+
+snapshot.layer.cornerRadius = CardViewController.cardCornerRadius
+snapshot.layer.masksToBounds = true
+
+// 2
+let containerView = transitionContext.containerView
+containerView.insertSubview(toVC.view, at: 0)
+containerView.addSubview(snapshot)
+fromVC.view.isHidden = true
+
+// 3
+AnimationHelper.perspectiveTransform(for: containerView)
+toVC.view.layer.transform = AnimationHelper.yRotation(-.pi / 2)
+let duration = transitionDuration(using: transitionContext)
+```
+
+上面这些代码与模态弹出动画代码类似，下面介绍几点不同：
+
+1. 这次你需要操作的是源视图控制器（“from”），所以这次的快照要取源视图控制器的。
+2. 同时，layers的顺序也很重要。从后到前顺序依次是：目标视图控制器，源视图控制器，源视图控制器的快照。在这个转场动画中它好像没那么重要，但是在一些可以取消的转场动画中就特别重要了。
+3. 旋转目标视图控制器到90度，然后你在旋转源视图控制器的视图快照时，就看不到目标视图控制器的视图了。
+
+接下来定制动画。添加下面代码到 **animateTransition(using:)** 下面：
+
+```
+UIView.animateKeyframes(
+  withDuration: duration,
+  delay: 0,
+  options: .calculationModeCubic,
+  animations: {
+    // 1
+    UIView.addKeyframe(withRelativeStartTime: 0.0, relativeDuration: 1/3) {
+      snapshot.frame = self.destinationFrame
+    }
+    
+    UIView.addKeyframe(withRelativeStartTime: 1/3, relativeDuration: 1/3) {
+      snapshot.layer.transform = AnimationHelper.yRotation(.pi / 2)
+    }
+    
+    UIView.addKeyframe(withRelativeStartTime: 2/3, relativeDuration: 1/3) {
+      toVC.view.layer.transform = AnimationHelper.yRotation(0.0)
+    }
+},
+  // 2
+  completion: { _ in
+    fromVC.view.isHidden = false
+    snapshot.removeFromSuperview()
+    if transitionContext.transitionWasCancelled {
+      toVC.view.removeFromSuperview()
+    }
+    transitionContext.completeTransition(!transitionContext.transitionWasCancelled)
+})
+```
+上面动画是跟之前的模态弹出动画刚好相反的。
+1. 首先缩小目标视图控制器的大小，然后旋转90度隐藏它。最后通过旋转来显示目标视图控制器。
+2. 
