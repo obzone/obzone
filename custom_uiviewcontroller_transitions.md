@@ -64,4 +64,35 @@ iOS 自带一些转场动画：push，pop，cover vertically(模态弹出动画)
 * 翻转结束后，目标视图控制器的view放到到跟屏幕一样大小。
 
 ### 创建动画
-现在开始创建 **Animation Controller** 对象
+现在开始创建 **Animation Controller** 对象。
+首先创建一个类继承 **NSObject**，命名为 **FlipPresentAnimationController**。
+**Animation Controller** 对象必须实现 **UIViewControllerAnimatedTransitioning** 协议，打开刚创建的文件修改如下:
+
+```
+class FlipPresentAnimationController: NSObject, UIViewControllerAnimatedTransitioning {
+
+}
+```
+这时候Xcode报错点击 **Fix** 自动添加必须要实现的方法:
+
+![](https://koenig-media.raywenderlich.com/uploads/2017/10/fix-it.png)
+
+模态弹出动画的开始值是从你点击的那个视图（View）开始，在刚添加的类中添加下面代码，用来存储动画的开始位置：
+
+```
+private let originFrame: CGRect
+
+init(originFrame: CGRect) {
+  self.originFrame = originFrame
+}
+```
+
+接下来你要实现刚添加的 **UIViewControllerAnimatedTransitioning** 协议里所要求的方法。在 **transitionDuration(using:)** 方法中添加下面的代码：
+
+```
+func transitionDuration(using transitionContext: UIViewControllerContextTransitioning?) -> TimeInterval {
+  return 2.0
+}
+```
+
+跟方法名一样，上面实现的方法指定转场动画的 时间长度（duration）。
