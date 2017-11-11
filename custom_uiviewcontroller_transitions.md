@@ -312,4 +312,202 @@ UIView.animateKeyframes(
 ```
 上面动画是跟之前的模态弹出动画刚好相反的。
 1. 首先缩小目标视图控制器的大小，然后旋转90度隐藏它。最后通过旋转来显示目标视图控制器。
-2. 
+2. 删掉源视图控制器的快照和恢复源视图控制器的旋转到原来状态。
+
+**Animation Controller** 在模态关闭动画中的调用是依赖于 **Transitioning Delegate** 的（参考API结构图）。
+
+打开 **CardViewController.swift** 文件然后在文件后面添加 **UIViewControllerTransitioningDelegate** 协议的实现方法。
+
+```
+func animationController(forDismissed dismissed: UIViewController)
+  -> UIViewControllerAnimatedTransitioning? {
+  guard let _ = dismissed as? RevealViewController else {
+    return nil
+  }
+  return FlipDismissAnimationController(destinationFrame: cardView.frame)
+}
+```
+上面这段代码返回源视图控制器要模态关闭时用的转场动画，同时把动画需要的动画toValue参数传递给动画。
+
+打开 **FlipPresentAnimationController.swift** 文件，修改动画时长从 **2.0** 到 **0.6** 。
+
+```
+func transitionDuration(using transitionContext: UIViewControllerContextTransitioning?) -> TimeInterval {
+  return 0.6
+}
+```
+
+运行项目，点击图片查看效果：
+
+![](https://koenig-media.raywenderlich.com/uploads/2015/07/flip-ready.gif)
+
+
+## 让模态关闭动画可以响应右滑手势
+
+先看一个可以响应收拾的模态关闭动画的例子
+
+![](https://koenig-media.raywenderlich.com/uploads/2015/07/settings.gif)
+
+接下来的这一章节我们就来优化之前的动画，让模态关闭动画能够响应右滑手势。
+
+### 先看一下模态关闭的转场动画是如何工作的
+
+转场动画可以响应手势或者代码实现的各种加速、减速、取消等等操作。要想实现动画的手势手势响应，**Transitioning Delegate** 必须要提供一个实现了 **UIViewControllerInteractiveTransitioning** 协议的 **Interaction Controller** 对象。
+
+我们之前已经完成了一个完整的转场动画。**Interaction Controller** 会控制我们之前实现的动画来与手势进行交互，而不是让它自动开始或者完成。苹果提供了一个已经实现了 **UIViewControllerInteractiveTransitioning** 协议的类 **UIPercentDrivenInteractiveTransition** ，接下里我们用这个类的基础上实现我们对动画的控制。
+
+创建一个新的继承自 **UIPercentDrivenInteractiveTransition** 类的子类 **SwipeInteractionController** 然后在文件里添加下面代码：
+
+```
+var interactionInProgress = false
+
+private var shouldCompleteTransition = false
+private weak var viewController: UIViewController!
+
+init(viewController: UIViewController) {
+  super.init()
+  self.viewController = viewController
+  prepareGestureRecognizer(in: viewController.view)
+}
+```
+
+这些代码的作用：
+
+* 声明**interactionInProgress**属性来标记手势是否完成。
+* 生命**shouldCompleteTransition**私有属性用来控制**Interaction Controller**，下面就会看到它的作用。
+* **viewController** 用来存于**Interaction Controller**交互的那个视图控制器。
+
+接下来代码用来设置手势（**gesture recognizer**）
+
+```
+private func prepareGestureRecognizer(in view: UIView) {
+  let gesture = UIScreenEdgePanGestureRecognizer(target: self,
+                                                 action: #selector(handleGesture(_:)))
+  gesture.edges = .left
+  view.addGestureRecognizer(gesture)
+}
+```
+这个手势被加到view上并且会在手指从view的左侧边上开始滑动的时候触发。
+
+实现 **Interaction Controller** 的最后一段代码是处理手势的代码：
+
+```
+@objc func handleGesture(_ gestureRecognizer: UIScreenEdgePanGestureRecognizer) {
+  // 1
+  let translation = gestureRecognizer.translation(in: gestureRecognizer.view!.superview!)
+  var progress = (translation.x / 200)
+  progress = CGFloat(fminf(fmaxf(Float(progress), 0.0), 1.0))
+  
+  switch gestureRecognizer.state {
+  
+  // 2
+  case .began:
+    interactionInProgress = true
+    viewController.dismiss(animated: true, completion: nil)
+    
+  // 3
+  case .changed:
+    shouldCompleteTransition = progress > 0.5
+    update(progress)
+    
+  // 4
+  case .cancelled:
+    interactionInProgress = false
+    cancel()
+    
+  // 5
+  case .ended:
+    interactionInProgress = false
+    if shouldCompleteTransition {
+      finish()
+    } else {
+      cancel()
+    }
+  default:
+    break
+  }
+}
+```
+
+解释一下：
+
+1. 声明一个局部变量**progress**来表示滑动的程度。通过从手势中获取 **translation** 属性来计算 **progress**的值。如果**progress**超过200就认为是完成了动画。
+2. 如果动画开始了，那么设置 **interactionInProgress** 为 **true** 然后触发模态关闭的动画。
+3. 如果手势在滑动过程中，就要连续调用 **update(_:)** 方法，这是父类**UIPercentDrivenInteractiveTransition** 中的方法，来控制转场动画的百分比。
+4. 如果手势取消，更新 **interactionInProgress** 属性为 **false** 并且调用父类的 **cancel()** 方法来回退取消动画。
+5. 如果手势完成，通过 **progress** 属性判断动画是否是完成然后调用 **cancel()** 或者 **finish()** 方法。
+
+现在要创建并使用 **SwipeInteractionController** 对象了，打开 **RevealViewController.swift** 然后添加属性：
+
+```
+var swipeInteractionController: SwipeInteractionController?
+```
+
+然后在 **viewDidLoad()** 方法最后添加：
+
+```
+swipeInteractionController = SwipeInteractionController(viewController: self)
+```
+
+当狗狗图片视图控制器（目标视图控制器）展示之后，**Interaction Controller** 被创建。
+
+打开 **FlipDismissAnimationController.swift** 在 **destinationFrame**属性 声明之后添加一个新的属性声明：
+
+```
+let interactionController: SwipeInteractionController?
+```
+
+修改 **init(destinationFrame:)**方法：
+
+```
+init(destinationFrame: CGRect, interactionController: SwipeInteractionController?) {
+  self.destinationFrame = destinationFrame
+  self.interactionController = interactionController
+}
+```
+
+要把 **Interaction Controller** 与 **Animation Controller** 关联起来，打开 **CardViewController.swift** 然后修改 **animationController(forDismissed:)** 方法如下：
+
+```
+func animationController(forDismissed dismissed: UIViewController)
+  -> UIViewControllerAnimatedTransitioning? {
+  guard let revealVC = dismissed as? RevealViewController else {
+    return nil
+  }
+  return FlipDismissAnimationController(destinationFrame: cardView.frame,
+                                        interactionController: revealVC.swipeInteractionController)
+}
+```
+上面方法修改了 **FlipDismissAnimationController** 对象的初始化方法。
+
+最后，UIKit会调用 **Transitioning Delegate** 对象的 **interactionControllerForDismissal(using:)** 方法来获取一个 **Interaction Controller** 对象。
+在文件后面添加 **UIViewControllerTransitioningDelegate** 协议的实现方法：
+
+```
+func interactionControllerForDismissal(using animator: UIViewControllerAnimatedTransitioning)
+  -> UIViewControllerInteractiveTransitioning? {
+  guard let animator = animator as? FlipDismissAnimationController,
+    let interactionController = animator.interactionController,
+    interactionController.interactionInProgress
+    else {
+      return nil
+  }
+  return interactionController
+}
+```
+
+解释一下：
+
+先强制转换 **animator**为 **FlipDismissAnimationController** 类型，如果强转成功获取一个 **interactionController** 对象并且判断用户是否在右滑，如果是就把这个 **Interaction Controller** 对象返回给 UIKit，从而实现对动画过程的控制。
+
+运行一下程序：
+
+![](https://koenig-media.raywenderlich.com/uploads/2015/07/interactive.gif)
+
+完结放火箭:
+
+![](https://koenig-media.raywenderlich.com/uploads/2017/10/object-vehicle-rocket.png)
+
+
+
+
