@@ -1,7 +1,4 @@
 ---
-author: kresnikwang
-comments: true
-date: 2017-11-12 21:41:32+00:00
 layout: post
 title: 自定义 UIViewController 的转场动画
 ---

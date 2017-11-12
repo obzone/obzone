@@ -1,3 +1,8 @@
+---
+layout: post
+title: 在已有项目中添加React Native支持
+---
+
 # 在已有项目中添加React Native支持
  
 *React Native* 让你可以用 *React* 的那套东西编写原生APP，通过 RN 你可以汲取网页开发的一些优点创建响应式app，比如不需要编译。

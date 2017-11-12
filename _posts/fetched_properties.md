@@ -1,3 +1,8 @@
+---
+layout: post
+title: Core Data 钩子函数配置细节 (fetched properties 属性)
+---
+
 ##coredata 关联关系
 
 ####弱关系（fetched properties）
