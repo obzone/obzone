@@ -9,7 +9,7 @@ name: obzone 的博客
 description: 我只是一个小开发
 
 # URL of your avatar or profile pic (you could use your GitHub profile pic)
-avatar: /images/config.png
+avatar: ./images/IMG_0797.JPG
 
 #
 # Flags below are optional
