@@ -1,3 +1,11 @@
+---
+author: kresnikwang
+comments: true
+date: 2017-11-12 21:41:32+00:00
+layout: post
+title: 自定义 UIViewController 的转场动画
+---
+
 # 自定义 UIViewController 的转场动画
 iOS 自带一些转场动画：push，pop，cover vertically(模态弹出动画),当然我们也可以自定义。
 自定义转场动画能带来非常好的用户体验，让你的app与众不同。同事自定义转场动画并没有想象的那么难。
