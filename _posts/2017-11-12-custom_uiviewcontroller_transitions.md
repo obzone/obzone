@@ -131,7 +131,7 @@ snapshot.layer.masksToBounds = true
 2. UIKit会把所有转场动画的信息和动画中涉及到的view放到一个 **container view** 中来统一管理。先从 **Transitioning Context** 中获取 **container view** 和确定新目标视图控制器的view的大小。
 3. 设置要展示的屏幕快照的大小和圆角等绘图设置，让他完全覆盖你点击的那个卡片视图（view）；
 
-向 **animateTransition(using:)** 方法继续添加下面内容：
+向 **animateTransition(using:)** 方法中继续添加下面内容：
 
 ```
 // 1
@@ -145,17 +145,17 @@ snapshot.layer.transform = AnimationHelper.yRotation(.pi / 2)
 // 3
 let duration = transitionDuration(using: transitionContext)
 ```
-系统创建的 **container view** 只包含源视图（"from" view）,如果要完成转场动画你需要添加一些其他的视图到 **containerView** 上，这里有个细节要注意：通过 **addSubview(_:)** 添加的的视图（view）会放在所有 **containerView** 的最上面。
+系统创建的 **container view** 只包含源视图（"from" view）,如果要完成转场动画你需要添加一些其他的视图到 **containerView** 上，这里有个细节要注意：通过 **addSubview(_:)** 添加的的视图（view）会放在所有 **containerView**子视图的最上面。
 接下来解释一下上面代码：
 
 1. 添加目标视图控制器的view到 **container view** 上并且隐藏它，再把目标视图控制器的快照截图添加到 **container view** 上。
-2. 设置 *动画对象* 的初始状态，围绕Y轴旋转90度。这会让 **container view** 在动画开始的时候是不可见的。
+2. 设置 *动画对象* 的初始状态，把目标视图控制器的快照围绕Y轴旋转90度。这会让 **container view** 在动画开始的时候快照视图是不可见的。
 3. 获取动画的时长。
 
 ```
 **AnimationHelper** 是一个小的工具类，帮助我们添加旋转动画到View上。
 ```
-现在已经完成了所有必要的配置，现在只剩下实现动画方法了：
+现在已经完成了转场动画所有必要的配置，现在只剩下实现动画方法了：
 
 ```
 // 1
@@ -194,7 +194,7 @@ UIView.animateKeyframes(
 2. 先沿着Y轴旋转目标视图控制器的view 90度把自己隐藏起来。
 3. 把目标视图控制器的快照旋转回原来的位置。
 4. 把目标视图控制器的快照放大到填满整个屏幕。
-5. 现在目标视图控制器的快照完全覆盖了目标视图控制器的view，现在可以去除快照，展示源视图控制器的view了。然后恢复源视图控制器的状态（因为源视图控制器的view是在动画结束后隐藏状态，如果不恢复源视图控制器的状态，等模态关闭的时候，源视图控制器的view是看不到的）。最后调用 **completeTransition(_:)** 方法通知UIKit动画完成,这会让UIkit保存最后的状态，并且从 **container view** 上移除 源视图控制器的view。
+5. 现在目标视图控制器的快照完全覆盖了目标视图控制器的view，然后去除快照视图。然后恢复源视图控制器的旋转量（因为源视图控制器的view在动画结束后是隐藏状态，如果不恢复源视图控制器的状态，等模态关闭的时候，源视图控制器的view是看不到的）。最后调用 **completeTransition(_:)** 方法通知UIKit动画完成,这会让UIkit保存最后的状态，并且从 **container view** 上移除源视图控制器的view。
 
 现在 **Animation Controller** 的定义已经完成了。
 
@@ -214,9 +214,9 @@ extension CardViewController: UIViewControllerTransitioningDelegate {
   }
 }
 ```
-上面代码返回一个用与被点击卡片相同的frame初始化自定义的 **Animation Controller** 实例。
+上面代码返回一个用被点击卡片的frame初始化自定义的 **Animation Controller** 实例。
 
-最后一步是设置 **CardViewController** 类为 转场动画的代理。 没个视图控制器都有一个 **transitioningDelegate** 属性，这个属性会被UIKit调用，来确定是否需要使用自定义转场动画。
+最后一步是设置 **CardViewController** 类为 转场动画的代理。 每个视图控制器都有一个 **transitioningDelegate** 属性，这个属性会被UIKit调用，来确定是否有可以使用的自定义转场动画。
 
 添加下面代码到 **prepare(for:sender:)** 方法的最后面：
 
@@ -225,8 +225,9 @@ destinationViewController.transitioningDelegate = self
 ```
 
 It’s important to note that it is the view controller being presented that is asked for a transitioning delegate, not the view controller doing the presenting!
+**注意：** 在模态动画中被调用 **transitioningDelegate** 属性的是目标视图控制器（将要展示的那个视图控制器），而不是源视图控制器（将要消失的那个视图控制器）；
 
-构建运行项目。点击任意卡片，会有下面效果：
+构建并运行项目。点击任意卡片，会有下面效果：
 
 ![](https://koenig-media.raywenderlich.com/uploads/2015/07/frontflip-slow.gif)
 
