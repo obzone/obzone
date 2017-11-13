@@ -3,14 +3,14 @@ layout: post
 title: 自定义 UIViewController 的转场动画
 ---
 
-# 自定义 UIViewController 的转场动画
+[原文地址](https://www.raywenderlich.com/170144/custom-uiviewcontroller-transitions-getting-started)
 
 iOS 自带一些转场动画：push，pop，cover vertically(模态弹出动画),当然我们也可以自定义。
-自定义转场动画能带来非常好的用户体验，让你的app与众不同。同事自定义转场动画并没有想象的那么难。
-在接下来的教程里，你讲跟随教程完成一个猜动物的游戏的app，然后学会下面技能：
+自定义转场动画能带来非常好的用户体验，让你的app与众不同。同时自定义转场动画并没有想象的那么难。
+在接下来的教程里，你讲跟随教程完成一个猜动物的游戏app，同时学会下面技能：
 
 * 了解转场动画的API。
-* 如果在模态弹出和模态关闭 ViewController 的时候运用转场动画。
+* 如何在模态弹出和模态关闭 ViewController 的时候运用转场动画。
 * 做一个响应式的转场动画。
 
 **注意：**
@@ -22,11 +22,11 @@ iOS 自带一些转场动画：push，pop，cover vertically(模态弹出动画)
 
 ![](https://koenig-media.raywenderlich.com/uploads/2015/07/starter.gif)
 
-接下来就是优化这个模版项目了。
+接下来我们的工作就是优化这个模版项目了。
 
 ## 转场动画的API概述
 
-转场动画的API是一组协议，然后你自己根据你的app需求来选择是用已经提供的对象或者创建你自己的对象来管理转场动画。在这章的最后你将了解这些协议的是干什么用的以及他们之间的关系。下面的图展示了这些API的组成部分：
+转场动画的API是一组协议，可以根据我们的需求来选择使用已经提供的动画对象还是创建你自己的对象来管理转场动画。在这章的最后你将了解这些协议的是干什么用的以及他们之间的关系。下面的图展示了这些API的组成部分：
 
 ![](https://koenig-media.raywenderlich.com/uploads/2015/07/parts.001.jpg)
 
@@ -37,22 +37,22 @@ iOS 自带一些转场动画：push，pop，cover vertically(模态弹出动画)
 #### Transitioning Delegate
 
 每一个视图控制器都会可以有一个 **transitioningDelegate** 的属性（iOS7开始）,这个属性对象遵从 **UIViewControllerTransitioningDelegate** 协议。
-当你模态弹出或者模态关闭一个视图控制器的时候，UIKit 会从 **transitioningDelegate** 对象中获取 **Animation Controller**(参照上图) 来进行动画。如果要自定义动画，你就必须要实现一个 **Transitioning delegate**（参照上个图），这个对象返回一个 **Animation Controller**(参照上图)。
+当你模态弹出或者模态关闭一个视图控制器的时候，UIKit 会从 **Transitioning delegate** 对象中获取 **Animation Controller**(参照上图) 来进行动画。如果要自定义动画，你就必须要实现一个 **Transitioning delegate**对象（参照上个图），这个对象可以返回一个 **Animation Controller**(参照上图)。
 
 #### Animation Controller
 
-**Animation Controller** 由 **Transitioning Delegate** 创建并且实现了 **UIViewControllerAnimatedTransitioning** 协议。**Animation Controller** 是转场动画的核心。
+**Animation Controller**对象 由 **Transitioning Delegate** 创建并且是要求实现了 **UIViewControllerAnimatedTransitioning**协议的。**Animation Controller** 是转场动画的核心。
 
 #### Transitioning Context
 
-**Transitioning Context** 对象实现 **UIViewControllerContextTransitioning** 协议，**Transitioning Context** 在转场动画实现中也非常重要。它包含了在转场动画中用到的所有 view 和 view controller 的信息。
-在转场动画的实现中，你不用自己实现这个协议。UIKit会在每次动画发生的时候创建并初始化好 **Transitioning Context** 对象并且会传给你的 **Animation Controller** 对象。
+**Transitioning Context** 对象实现了 **UIViewControllerContextTransitioning** 协议，**Transitioning Context** 在转场动画实现中也非常重要。它包含了在转场动画中用到的所有 **view** 和 **view controller** 的信息。
+在转场动画的实现中，你不用自己实现这个协议。UIKit会在每次动画发生的时候创建并初始化好 **Transitioning Context** 对象，然后赋值到你的 **Animation Controller** 对象属性中。
 
 ## 转场动画流程
 
 模态弹出转场动画的发生有下面几个步骤：
 	
-1. 你通过代码或者故事版的 *segue* 出发转场动画。
+1. 你通过代码或者故事版的 *segue* 触发转场动画。
 2. UIKit获取目标视图控制器（将要展示的那个视图控制器）的**transitioningDelegate**属性。如果目标视图控制器没有定义这个属性，UIKit就会用内建的默认动画。
 3. 接着UIKit会调用 **Transitioning Delegate** 的 **animationController(forPresented:presenting:source:)** 方法来创建一个 **Animation Controller** 对象。如果这个方法没有成功创建 **Animation Controller** 对象，那么UIKit还是会用默认动画。
 4. UIKit创建 **Transitioning Context** 对象。
@@ -64,16 +64,16 @@ iOS 自带一些转场动画：push，pop，cover vertically(模态弹出动画)
 
 ## 开始创建一个自定义模态弹出动画
 
-现在开始实践一下上面的理论。下面开始实现以下动画：
+现在开始根据上面的理论，实现以下动画：
 
-* 当用户点击一个卡片，它会翻转+所有目标视图控制器的view跟卡片一样大小。
-* 翻转结束后，目标视图控制器的view放到到跟屏幕一样大小。
+* 当用户点击一个卡片，它会翻转卡片来展示一个跟卡片相同大小的目标视图控制器的view。
+* 翻转结束后，目标视图控制器的view放大到跟屏幕一样大小。
 
 ### 创建动画
 
 现在开始创建 **Animation Controller** 对象。
 首先创建一个类继承 **NSObject**，命名为 **FlipPresentAnimationController**。
-**Animation Controller** 对象必须实现 **UIViewControllerAnimatedTransitioning** 协议，打开刚创建的文件修改如下:
+新创建的 **Animation Controller**对象必须实现 **UIViewControllerAnimatedTransitioning** 协议，打开刚创建的文件修改如下:
 
 ```
 class FlipPresentAnimationController: NSObject, UIViewControllerAnimatedTransitioning {
@@ -94,7 +94,7 @@ init(originFrame: CGRect) {
 }
 ```
 
-接下来你要实现刚添加的 **UIViewControllerAnimatedTransitioning** 协议里所要求的方法。在 **transitionDuration(using:)** 方法中添加下面的代码：
+接下来你要实现 **UIViewControllerAnimatedTransitioning** 协议里所要求的方法。在 **transitionDuration(using:)** 方法中添加下面的代码：
 
 ```
 func transitionDuration(using transitionContext: UIViewControllerContextTransitioning?) -> TimeInterval {
@@ -102,7 +102,7 @@ func transitionDuration(using transitionContext: UIViewControllerContextTransiti
 }
 ```
 
-跟方法名一样，上面实现的方法指定转场动画的时间长度（duration）。
+上面实现的方法指定转场动画的时间长度（duration）。
 
 添加下面代码到 **animateTransition(using:)** 中
 
@@ -128,10 +128,10 @@ snapshot.layer.masksToBounds = true
 上面代码做的事情：
 
 1. 获取目标视图控制器和源控制器对象。创建一个动画结束后要展示的屏幕快照。
-2. UIKit会把所有转场动画和涉及到的view放到一个 container view 中来统一管理。先从 **Transitioning Context** 中获取 **container view** 和确定新view最后的大小。
+2. UIKit会把所有转场动画的信息和动画中涉及到的view放到一个 **container view** 中来统一管理。先从 **Transitioning Context** 中获取 **container view** 和确定新目标视图控制器的view的大小。
 3. 设置要展示的屏幕快照的大小和圆角等绘图设置，让他完全覆盖你点击的那个卡片视图（view）；
 
-向 **animateTransition(using:)** 方法继续添加下面方法：
+向 **animateTransition(using:)** 方法继续添加下面内容：
 
 ```
 // 1
