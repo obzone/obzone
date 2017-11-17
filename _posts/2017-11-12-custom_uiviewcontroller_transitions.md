@@ -235,7 +235,7 @@ It’s important to note that it is the view controller being presented that is 
 
 到现在为止我们已经实现了模态弹出的转场动画，接下来要实现模态关闭的转场动画。
 
-新建一个新的类：**FlipDismissAnimationController** ，继承自 *NSObject*。
+建一个新的类：**FlipDismissAnimationController** ，继承自 *NSObject*。
 
 替换掉自动生成的内容，改成下面这种：
 
@@ -257,12 +257,12 @@ class FlipDismissAnimationController: NSObject, UIViewControllerAnimatedTransiti
   }
 }
 ```
-这个新创建的 **Animation Controller**类 做与模态关闭动画，与模态弹出动画相对。需要完成以下几个步骤：
+我们用这个新创建的 **Animation Controller**类 做模态关闭动画，还需要完成以下几个步骤：
 
-* 缩小正在展示的视图控制器的大小，回到卡片大小（destinationFrame）保存这个值。
-* 翻转正在展示的view到卡片。
+* 缩小正在展示的视图控制器的大小，回到卡片大小。用destinationFrame变量保存这个值。
+* 翻转正在展示的view回到最开始卡片的页面。
 
-添加下面代码到 **animateTransition(using:)** 方法下面：
+添加代码到 **animateTransition(using:)** 方法下面：
 
 ```
 // 1
@@ -291,8 +291,8 @@ let duration = transitionDuration(using: transitionContext)
 上面这些代码与模态弹出动画代码类似，下面介绍几点不同：
 
 1. 这次你需要操作的是源视图控制器（“from”），所以这次的快照要取源视图控制器的。
-2. 同时，layers的顺序也很重要。从后到前顺序依次是：目标视图控制器，源视图控制器，源视图控制器的快照。在这个转场动画中它好像没那么重要，但是在一些可以取消的转场动画中就特别重要了。
-3. 旋转目标视图控制器到90度，然后你在旋转源视图控制器的视图快照时，就看不到目标视图控制器的视图了。
+2. 同时，layers的顺序也要注意一下，从后到前顺序依次是：目标视图控制器，源视图控制器，源视图控制器的快照。虽然layers的顺序在这个转场动画中它好像没那么重要，但是在一些可以取消的转场动画中就特别重要了。
+3. 旋转 *目标视图控制器* 到90度，然后当你在旋转 *源视图控制器* 的快照时，就看不到 *目标视图控制器* 了。
 
 接下来定制动画。添加下面代码到 **animateTransition(using:)** 下面：
 
