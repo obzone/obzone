@@ -290,7 +290,7 @@ let duration = transitionDuration(using: transitionContext)
 
 上面这些代码与模态弹出动画代码类似，下面介绍几点不同：
 
-1. 这次你需要操作的是源视图控制器（“from”），所以这次的快照要取源视图控制器的。
+1. 这次你需要操作的是源视图控制器（"from"视图控制器），所以这次的快照要取源视图控制器的。
 2. 同时，layers的顺序也要注意一下，从后到前顺序依次是：目标视图控制器，源视图控制器，源视图控制器的快照。虽然layers的顺序在这个转场动画中它好像没那么重要，但是在一些可以取消的转场动画中就特别重要了。
 3. 旋转 *目标视图控制器* 到90度，然后当你在旋转 *源视图控制器* 的快照时，就看不到 *目标视图控制器* 了。
 
@@ -342,7 +342,7 @@ func animationController(forDismissed dismissed: UIViewController)
   return FlipDismissAnimationController(destinationFrame: cardView.frame)
 }
 ```
-上面这段代码返回源视图控制器要模态关闭时用的转场动画，同时把动画需要的动画toValue参数传递给动画。
+上面这段代码返回 **源视图控制器** 模态关闭时用到的转场动画，同时把动画需要的toValue参数传递给动画控制器。
 
 打开 **FlipPresentAnimationController.swift** 文件，修改动画时长从 **2.0** 到 **0.6** 。
 
@@ -367,9 +367,9 @@ func transitionDuration(using transitionContext: UIViewControllerContextTransiti
 
 ### 先看一下模态关闭的转场动画是如何工作的
 
-转场动画可以响应手势或者代码实现的各种加速、减速、取消等等操作。要想实现动画的手势手势响应，**Transitioning Delegate** 必须要提供一个实现了 **UIViewControllerInteractiveTransitioning** 协议的 **Interaction Controller** 对象。
+转场动画可以响应手势或者用代码实现的各种加速、减速、取消等动作的动画。要想实现动画的手势手势响应，**Transitioning Delegate** 必须要提供一个实现了 **UIViewControllerInteractiveTransitioning** 协议的 **Interaction Controller** 对象。
 
-我们之前已经完成了一个完整的转场动画。**Interaction Controller** 会控制我们之前实现的动画来与手势进行交互，而不是让它自动开始或者完成。苹果提供了一个已经实现了 **UIViewControllerInteractiveTransitioning** 协议的类 **UIPercentDrivenInteractiveTransition** ，接下里我们用这个类的基础上实现我们对动画的控制。
+我们之前已经完成了一个完整的转场动画。**Interaction Controller** 会控制我们之前实现的动画来与手势进行交互，而不是让它自动开始和完成。苹果提供了一个已经实现了 **UIViewControllerInteractiveTransitioning** 协议的类 **UIPercentDrivenInteractiveTransition** ，接下里我们在这个类的基础上实现我们对动画的控制。
 
 创建一个新的继承自 **UIPercentDrivenInteractiveTransition** 类的子类 **SwipeInteractionController** 然后在文件里添加下面代码：
 
@@ -390,9 +390,9 @@ init(viewController: UIViewController) {
 
 * 声明**interactionInProgress**属性来标记手势是否完成。
 * 生命**shouldCompleteTransition**私有属性用来控制**Interaction Controller**，下面就会看到它的作用。
-* **viewController** 用来存于**Interaction Controller**交互的那个视图控制器。
+* **viewController** 用来存要与 **Interaction Controller** 交互的那个视图控制器。
 
-接下来代码用来设置手势（**gesture recognizer**）
+接下来的代码用来设置手势（**gesture recognizer**）
 
 ```
 private func prepareGestureRecognizer(in view: UIView) {
@@ -444,13 +444,13 @@ private func prepareGestureRecognizer(in view: UIView) {
 }
 ```
 
-解释一下：
+解释上面代码：
 
 1. 声明一个局部变量**progress**来表示滑动的程度。通过从手势中获取 **translation** 属性来计算 **progress**的值。如果**progress**超过200就认为是完成了动画。
 2. 如果动画开始了，那么设置 **interactionInProgress** 为 **true** 然后触发模态关闭的动画。
 3. 如果手势在滑动过程中，就要连续调用 **update(_:)** 方法，这是父类**UIPercentDrivenInteractiveTransition** 中的方法，来控制转场动画的百分比。
 4. 如果手势取消，更新 **interactionInProgress** 属性为 **false** 并且调用父类的 **cancel()** 方法来回退取消动画。
-5. 如果手势完成，通过 **progress** 属性判断动画是否是完成然后调用 **cancel()** 或者 **finish()** 方法。
+5. 如果手势完成，通过 **progress** 属性判断动画是否可以完成然后调用 **cancel()** 或者 **finish()** 方法。
 
 现在要创建并使用 **SwipeInteractionController** 对象了，打开 **RevealViewController.swift** 然后添加属性：
 
