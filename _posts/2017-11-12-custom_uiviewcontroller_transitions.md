@@ -46,7 +46,7 @@ iOS 自带一些转场动画：push，pop，cover vertically(模态弹出动画)
 #### Transitioning Context
 
 **Transitioning Context** 对象实现了 **UIViewControllerContextTransitioning** 协议，**Transitioning Context** 在转场动画实现中也非常重要。它包含了在转场动画中用到的所有 **view** 和 **view controller** 的信息。
-在转场动画的实现中，你不用自己实现这个协议。UIKit会在每次动画发生的时候创建并初始化好 **Transitioning Context** 对象，然后赋值到你的 **Animation Controller** 对象属性中。
+在转场动画的实现中，你不用自己创建这个对象。UIKit会在每次动画发生的时候创建并初始化好 **Transitioning Context** 对象，然后赋值到你的 **Animation Controller** 对象属性中。
 
 ## 转场动画流程
 
