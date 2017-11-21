@@ -60,7 +60,7 @@ iOS 自带一些转场动画：push，pop，cover vertically(模态弹出动画)
 6. UIKit调用 **Animation Controller** 对象的 **animateTransition(using:)** 方法开始动画。
 7. 最后，在动画结束后 **Animation Controller** 会调用 **Transitioning Context** 的 **completeTransition(_:)** 方法来结束动画。
 
-模态关闭的转场动画步骤跟模态弹出的动画步骤相似。在模态关闭动画中，UIKit调用源视图控制器（将要被关闭的视图控制器）来获取 **Transitioning Delegate** 对象。然后 **Transitioning Delegate** 通过调用 **animationController(forDismissed:)** 方法完成模态关闭的动画。
+模态关闭的转场动画步骤跟模态弹出的动画步骤相似。在模态关闭动画中，UIKit调用源视图控制器（将要被关闭的视图控制器）来获取 **Transitioning Delegate** 对象。然后 **Transitioning Delegate** 通过调用 **animationController(forDismissed:)** 方法来获取完成模态关闭动画的 **Animation Controller** 对象。
 
 ## 开始创建一个自定义模态弹出动画
 
