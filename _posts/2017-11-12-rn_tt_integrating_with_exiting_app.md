@@ -2,8 +2,6 @@
 layout: post
 title: 在已有项目中添加React Native支持
 ---
-
-# 在已有项目中添加React Native支持
  
 *React Native* 让你可以用 *React* 的那套东西编写原生APP，通过 RN 你可以汲取网页开发的一些优点创建响应式app，比如不需要编译。
 
@@ -180,5 +178,93 @@ app首页是一个列表，展示所有Mixers，点击每一个会跳转到详�
 在 RN 项目中原生代码和js通过 [JavaScriptCore Framework](https://developer.apple.com/library/tvos/documentation/Carbon/Reference/WebKit_JavaScriptCore_Ref/index.html) 框架进行交互。
 
 ![](https://koenig-media.raywenderlich.com/uploads/2016/06/mixer-theory-bridge-3.png)
+
+原生和js之间的交互式异步的，所以可以保证性能，并且消息的发送是线性的。先看一下展示如何展示一个 React Native view 来理解一下桥的概念：
+
+1. A. **原生：** 初始化桥。
+
+   B. 通过桥发送一个消息到 JS 来启动程序。
+
+2. A. **JS** 运行初始化时注册过的 AddRatingApp 组件。
+
+	B. 调用组件的 **render** 方法展示 **view** 和 **text**。
+	C. 通过桥批量发送消息让原生代码创建和展示组件。
+	
+![](https://koenig-media.raywenderlich.com/uploads/2016/06/mixer-theory-bridge-msgs-1.png)
+
+*view* 的布局会先用 **css-layout**, 然后用 **UIKit** 把 **view**转成**UIView**、**Text**转成**UILabel**。
+
+介绍一下不同线程在代码执行中的作用：
+
+* **Main Thread：** 负责通过 UIKit 来展示原生组件。
+* **Shadow Queue：** 这是个GCD queue 负责计算原生组件的布局。
+* **JavaScripe Queue：** 负责 JS 代码的执行。
+* **Module Queue：** 默认情况下，每个自定义的 *native module*会有自己的 GCD queue。 会在后面的 native module 学习。
+
+在上面章节，我们已经通过 **RCTRootView(_:moduleName:initialProperties:launchOptions)** 创建了一个 view。如果程序中只有一个 **RCTRootView**。但是如果程序中有多个 React Native views，最后先创建一个 **RCTBridge** 实例来设置更多的views。
+创建一个名为 **MixerReactModule.swift** 文件，然后天下如下代码：
+
+```
+import Foundation
+import React
+
+class MixerReactModule: NSObject {  
+  static let sharedInstance = MixerReactModule()
+}
+```
+这个方法创建了一个懒加载的 **单例模式**。
+
+添加变量:
+
+```
+var bridge: RCTBridge?
+```
+
+然后，添加 **RCTBridgeDelegate** 的方法 **sourceURL(for:)** 作为当前类的 **extension**。
+
+```
+extension MixerReactModule: RCTBridgeDelegate {
+  func sourceURL(for bridge: RCTBridge!) -> URL! {
+    return URL(string: "http://localhost:8081/index.ios.bundle?platform=ios")
+  }
+}
+```
+继续向类中添加下面方法：
+
+```
+func createBridgeIfNeeded() -> RCTBridge {
+  if bridge == nil {
+    bridge = RCTBridge.init(delegate: self, launchOptions: nil)
+  }
+  return bridge!
+}
+
+func viewForModule(_ moduleName: String, initialProperties: [String : Any]?) -> RCTRootView {
+  let viewBridge = createBridgeIfNeeded()
+  let rootView: RCTRootView = RCTRootView(
+    bridge: viewBridge,
+    moduleName: moduleName,
+    initialProperties: initialProperties)
+  return rootView
+}
+```
+
+**viewForModule(_:initialProperties)** 调用 **createBridgeIfNeeded()** 方法来来创建一个 **RCTBridge** 实例。然后 **RCTBridge** 实例通过调用 **RCTRootView(_:moduleName:initialProperties)** 来创建 **RCTRootView** 实例。后面创建其他root view的时候可以重用这个 **RCTBridge** 实例。
+
+现在，打开 **AddRatingViewController.swift** 文件，然后修改 **viewDidLoad()**方法下的 **addRatingView** 变量的赋值如下：
+
+```
+addRatingView = MixerReactModule.sharedInstance.viewForModule(
+  "AddRatingApp",
+  initialProperties: nil)
+```
+运行程序；你会发现没有什么变化，但是我们已经完成了要添加 React Native views所需的配置。
+
+![](https://koenig-media.raywenderlich.com/uploads/2016/06/mixer-bare-bones-react-native-app.png)
+
+
+
+
+
 
 
