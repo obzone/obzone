@@ -262,9 +262,60 @@ addRatingView = MixerReactModule.sharedInstance.viewForModule(
 
 ![](https://koenig-media.raywenderlich.com/uploads/2016/06/mixer-bare-bones-react-native-app.png)
 
+##添加一个视图导航栏到你的view上
 
+创建一个 **AddRatingApp.js** 文件到 **js** 文件夹下。添加下面内容到文件中：
 
+```
+'use strict';
 
+import React from 'react';
+import ReactNative, {
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'green',
+  },
+  welcome: {
+    fontSize: 20,
+    color: 'white',
+  },
+});
 
+class AddRatingApp extends React.Component {
+  render() {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.welcome}>We're live from React Native!!!</Text>
+      </View>
+    )
+  }
+}
 
+module.exports = AddRatingApp;
+```
+
+聪明的你是否已经发现了添加的内容和 **index.ios.js** 文件中的内容很像。
+
+打开 **index.ios.js** 文件并替换文件内容为：
+
+```
+'use strict';
+
+import {AppRegistry} from 'react-native';
+
+const AddRatingApp = require('./AddRatingApp');
+
+AppRegistry.registerComponent('AddRatingApp', () => AddRatingApp);
+```
+
+上面代码引入我们上面创建的 **AddRatingApp** 组件来创建初始化页面。点击模拟器上的 **Cmd+R** 重新加载app。此时应该没什么变化。
+
+接下里用 **Navigator** 组件来设置导航栏。我们通过调用 **renderScene** 方法来返回导航栏组件来把导航栏现实到页面上。你也可以通过传递一个 **Navigator** 到 **navigationBar**属性来创建一个自定义的导航栏。
