@@ -2,6 +2,8 @@
 layout: post
 title: 在已有项目中添加React Native支持
 ---
+
+[原文地址](https://www.raywenderlich.com/136047/react-native-existing-app)
  
 *React Native* 让你可以用 *React* 的那套东西编写原生APP，通过 RN 你可以汲取网页开发的一些优点创建响应式app，比如不需要编译。
 
@@ -318,4 +320,177 @@ AppRegistry.registerComponent('AddRatingApp', () => AddRatingApp);
 
 上面代码引入我们上面创建的 **AddRatingApp** 组件来创建初始化页面。点击模拟器上的 **Cmd+R** 重新加载app。此时应该没什么变化。
 
-接下里用 **Navigator** 组件来设置导航栏。我们通过调用 **renderScene** 方法来返回导航栏组件来把导航栏现实到页面上。你也可以通过传递一个 **Navigator** 到 **navigationBar**属性来创建一个自定义的导航栏。
+接下里用 **Navigator** 组件来设置导航栏。我们通过调用 **renderScene** 方法来返回导航栏组件来把导航栏现实到页面上。通过返回一个 **Navigator.NavigationBar** 组件来实现自定义导航栏。
+
+如果要自定义 **Navigator.NavigationBar**的效果，你需要修改它的 **routeMapper**属性，来修改导航栏的左右两侧按钮和标题。
+
+打开**AddRatingApp.js**文件，引入**Navigator**和**TouchableOpacity** 模块。
+
+```
+  ...
+  Navigator,
+  TouchableOpacity,
+} from 'react-native';
+```
+
+然后使用**TouchableOpacity**来定义导航栏左右按钮的点击事件。
+
+修改 **styles** 对象的定义如下：
+
+```
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  content: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'green',
+  },
+  welcome: {
+    fontSize: 20,
+    color: 'white',
+  },
+  navBar: {
+    backgroundColor: '#25507b',
+  },
+  navBarText: {
+    fontSize: 16,
+    marginVertical: 10,
+  },
+  navBarTitleText: {
+    color: 'white',
+    fontWeight: '500',
+    marginVertical: 9,
+  },
+  navBarLeftButton: {
+    paddingLeft: 10,
+  },
+  navBarRightButton: {
+    paddingRight: 10,
+  },
+  navBarButtonText: {
+    color: 'white',
+  },
+});
+```
+
+在添加导航栏展示代码之前，先添加下面代码来展示导航栏的内容：
+
+```
+_renderScene(route, navigator) {
+  return (
+    <View style={styles.content}>
+      <Text style={styles.welcome}>We're live from React Native!!!</Text>
+    </View>
+  );
+}
+```
+
+接下来添加展示导航栏标题的代码：
+
+```
+_renderNavTitle(route, navigator, index, navState) {
+  return <Text style={styles.navBarTitleText}>{route.title}</Text>;
+}
+```
+
+这个方法只是简单的返回了 **route** 传进来的标题。
+
+接下来，添加导航栏左侧按钮：
+
+```
+_renderNavLeftItem(route, navigator, index, navState) {
+  return (
+    <TouchableOpacity
+      onPress={() => console.log('Cancel button pressed')}
+      style={styles.navBarLeftButton}>
+      <Text style={[styles.navBarText, styles.navBarButtonText]}>
+        Cancel
+      </Text>
+    </TouchableOpacity>
+  );
+}
+```
+
+**Text** 组件被包含在 **TouchableOpactiy**组件中，所以就可以相应点击事件，**onPress**在按钮被点击的时候执行。
+
+相同的方法来添加右侧点击按钮：
+
+```
+_renderNavRightItem(route, navigator, index, navState) {
+  return (
+    <TouchableOpacity
+      onPress={() => console.log('Save button pressed')}
+      style={styles.navBarRightButton}>
+      <Text style={[styles.navBarText, styles.navBarButtonText]}>
+        Save
+      </Text>
+    </TouchableOpacity>
+  );
+}
+```
+
+接下来添加下面的 **render** 方法来来展示 **Navigator** 组件：
+
+```
+render() {
+  return (
+    <Navigator
+      debugOverlay={false}
+      style={styles.container}
+      initialRoute={{title: 'Add Rating'}}
+      renderScene={this._renderScene.bind(this)}
+      navigationBar={
+        <Navigator.NavigationBar
+          routeMapper={{
+            LeftButton: this._renderNavLeftItem.bind(this),
+            RightButton: this._renderNavRightItem.bind(this),
+            Title: this._renderNavTitle.bind(this),
+          }}
+          style={styles.navBar}
+        />
+      }
+    />
+  );
+}
+```
+
+**initialRoute** 属性设置初始化页面的属性，并且提供 **_renderNavTitle** 方法需要的**title**值。
+
+重新运行一下项目，看到如下页面：
+
+![](https://koenig-media.raywenderlich.com/uploads/2016/06/mixer-add-navigation-1.png)
+
+然后点击导航栏左右两侧按钮，Xcode控制台显示下面内容：
+
+```
+2016-09-21 17:20:13.085 [info][tid:com.facebook.react.JavaScript] Cancel button pressed
+2016-09-21 17:20:27.838 [info][tid:com.facebook.react.JavaScript] Save button pressed
+```
+
+**NOTE:**`当然你也可以在`**Terminal**`中输入` **react-native log-ios** `来显示app的输出`
+
+##与 React Native 组件进行交互
+
+当初始化 **RCTRootView**时，我们可以把值传到 **initialProperties**属性中。这个值会被当作初始值被传递到root component 中。
+
+打开 **AddRatingViewController.swift** 文件，修改 **addRatingView** 的值并且传入 *mixer identifier* 和 *current rating*:
+
+```
+addRatingView = MixerReactModule.sharedInstance.viewForModule(
+      "AddRatingApp",
+      initialProperties: ["identifier": mixer.identifier, "currentRating": currentRating])
+```
+
+因为你修改了原生代码，所以需要重新编译并在Xcode中运行程序。点击第一个 *mixer* 然后点击 **Add Rating**。
+
+在 Xcode 的控制台中你会看到下面数据：
+
+```
+2016-09-21 17:49:23.075 [info][tid:com.facebook.react.JavaScript] Running application "AddRatingApp" with appParams: {"rootTag":1,"initialProps":{"currentRating":0,"identifier":1}}. __DEV__ === true, development-level warning are ON, performance optimizations are OFF
+```
+
+##与原生组件进行交互
+
