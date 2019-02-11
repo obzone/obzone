@@ -117,3 +117,13 @@ title: 为iOS开发framework静态库
 
 ![](https://koenig-media.raywenderlich.com/uploads/2018/05/Screen-Shot-2018-05-27-at-3.13.54-PM.png)
 
+选择 **KnobShowcase** 项目的根目录打开项目编辑目录：选择 **KnobShowcase** 编译目标，然后选择 **General** 标签页。
+
+滚动到 **Embedded Binaries** 栏。把 **KnobControl.framework** 从 **KnobControl.xcodeproj** 的 **Products** 文件夹拖到当前栏目中。
+
+现在你已经添加了静态库的入口到 **Embedded Binaries** 和 **Linked Frameworks and Binaries** 中。
+
+到 **ViewController.swift** 中在文件最上面添加 
+
+    import KnobControl
+
