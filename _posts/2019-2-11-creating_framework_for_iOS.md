@@ -127,3 +127,46 @@ title: 为iOS开发framework静态库
 
     import KnobControl
 
+目前为止仍然有报错的问题存在，这是因为swift的 **access control** 机制问题，默认情况下，Swift会让所有东西都是 `internal` 或者仅在模块内部可见。
+
+为了解决这个问题，我们要修改 `Knob` 类的访问权限。
+
+先介绍一下 Swift 的五个权限级别：
+
+* **Open and public**：可以被app调用或者其他 frameworks 调用。
+* **Internal**：可以被静态库内部调用。
+* **Fileprivate**：文件内部调用。
+* **Private**：在封闭的生命中调用，e.g. 比如 class 内部。
+
+现在我们需要将 **Knob** 变成 public 的
+
+Note：如果你想深入了解访问机制，open 和 public 的区别，请查看下面文档 [Access Control Documentation](https://developer.apple.com/library/content/documentation/Swift/Conceptual/Swift_Programming_Language/AccessControl.html)
+
+# 更新权限
+
+打开 **Knob.swift** 修改类生命的权限修饰符：
+
+    public class Knob : UIControl {
+
+现在 `Knob` 可以被所有引入 `KnobControl` 框架的app可见了
+
+现在添加 `public` 修饰符到：
+
+* **minimumValue**，**maximumValue**，**value**，**isContinuous**，**lineWidth****，startAngle**, **endAngle**, **pointerLength**, **color** 属性。
+* **Init** 函数。
+* **setValue(_:animated:)** 和 **tintColorDidChange()** 方法。
+
+构建运行项目，error消失，但是有新的崩溃问题出现：
+
+![](https://koenig-media.raywenderlich.com/uploads/2018/05/how-to-create-a-framework-ios-first-create-framework-crash.png)
+
+因为把 `Knob` 类放到静态库了，所有丢失了类和storyboard的引用：
+
+1. 打开 **KnobShowcase** 中的 **Main.Storyboard**。
+2. 在 **Document outline** 中，选择 **Knob** 类。
+3. 在 **Identity inspector** 的 **Custom Class** 模块中修改 **Module** 中的值为 **KnobControl**，如下图。
+
+![](https://koenig-media.raywenderlich.com/uploads/2018/05/how-to-create-a-framework-ios-first-create-framework-storyboard-1.png)
+
+构建并运行，现在一切正常。
+
