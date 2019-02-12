@@ -311,3 +311,90 @@ Note：当执行 `pod install` 之后，你可能会收到如下警告![](https:
 
 ![](https://koenig-media.raywenderlich.com/uploads/2018/05/how-to-create-a-framework-ios-first-create-framework-pods-structure.png)
 
+但是修改在 **Pods** 文件夹中的项目之后，下次重新安装项目，之前的项目就会复原。
+
+# 发布 Pod
+
+这一部分，会把你的Pod发布到github上，让它像其他三方项目那样使用。
+
+## 创建一个仓库
+
+如果还没有账号，来[这里注册](https://github.com/join)
+
+像下面这样创建一个 GitHub 仓库
+
+![](https://koenig-media.raywenderlich.com/uploads/2018/05/how-to-create-a-framework-ios-first-create-framework-new-repo-1.png)
+
+点击 **Create repository** 按钮创建一个仓库。
+
+## 克隆仓库
+
+在 **KnobShowcase** 目录下创建一个 `repo` 文件夹，并且进入文件夹：
+
+    mkdir repo && cd repo
+
+把刚刚创建的 GitHub 仓库克隆到当前文件夹下面：
+
+    git clone URL
+
+正常会有如下输出：
+
+    Cloning into 'KnobControl'...
+    remote: Counting objects: 4, done.
+    remote: Compressing objects: 100% (4/4), done.
+    remote: Total 4 (delta 0), reused 0 (delta 0), pack-reused 0
+    Unpacking objects: 100% (4/4), done.
+
+## 添加代码到仓库
+
+接下里把 **KnobControl** 文件夹下的所有内容复制到 **repo/KnobControl** 文件夹下。
+
+打开 **KnobControl.podspec** 文件，修改 `s.source` 内容如下：
+
+    s.source       = { :git => "URL", :tag => "1.0.0" }
+
+把 `URL` 换成你的 GitHub 仓库的地址。
+
+## 把内容提交到 GitHub
+
+    cd KnobControl/
+    git add .
+    git commit -m "Initial commit"
+    git push -u origin master
+
+提交成功之后到 GitHub 下面可以看到：
+
+![](https://koenig-media.raywenderlich.com/uploads/2018/05/how-to-create-a-framework-ios-first-create-framework-repo-files.png)
+
+## 打标签
+
+打开 **KnobControl.podspec** 文件，设置版本如下：
+
+    s.version      = "1.0.0"
+
+同时标记仓库版本，执行下面命令：
+
+    git tag 1.0.0
+    git push --tags
+
+检查 podfile：
+
+    pod spec lint
+
+# 更新 Podfile
+
+修改文件中的
+
+    pod 'KnobControl', :path => '../KnobControl'
+
+为
+
+    pod 'KnobControl', :git => 'URL', :tag => '1.0.0'
+
+修改 `URL` 为你Github仓库的地址
+
+然后在命令行中执行
+
+    pod update
+
+完成！
