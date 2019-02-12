@@ -1,4 +1,4 @@
----
+ ---
 layout: post
 title: 为iOS开发framework静态库
 ---
@@ -170,3 +170,136 @@ Note：如果你想深入了解访问机制，open 和 public 的区别，请查
 
 构建并运行，现在一切正常。
 
+# Interface Builder 的实时渲染(额外优化)
+
+打开 **Main.storyboard**。看到方块里是空白的，如果你看不到蓝色的边框，打开 **Editor** > **Canvas** > **Show Bounds Rectangles**。
+
+![](https://koenig-media.raywenderlich.com/uploads/2018/05/how-to-create-a-framework-ios-first-create-framework-blank.png)
+
+如果想要让引用你 静态库 的人能够通过代码或者XIB的方式修改 knob后，能实时显示效果，你还需要多一步去优化 **Live Views**。
+
+打开 **Knob.swift** 在 `Knob` 声明前加上 `@IBDesignable` 修饰符：
+
+    @IBDesignable public class Knob: UIControl {
+
+这个修饰符可以让 XIB 开启 实时渲染模式。
+
+打开 **Main.storyboard** 此时还是空白的蓝框，没有什么变化。
+
+别急！苹果还提供了一个 `prepareForInterfaceBuilder()` 方法，这个方法只会在 Xib 渲染是调用。
+
+打开 `Knob.swift` 文件，添加下面代码：
+
+    extension Knob {
+        public override func prepareForInterfaceBuilder() {
+            super.prepareForInterfaceBuilder()
+
+            renderer.updateBounds(bounds)
+        }
+    }
+
+打开 **Main.storyboard**，同时确保 **Editor** > **Automatically Refresh Views** 是打开的，现在就能看到方框里有东西了：
+
+![](https://koenig-media.raywenderlich.com/uploads/2018/05/how-to-create-a-framework-ios-first-create-framework-live.png)
+
+# 创建一个对应的 CocoaPod
+
+Cocoapods 也是以一个静态库的形式包含在app中。
+
+# 清除现有依赖
+
+先把 **KnobControl** 项目从 **KnobShowcase** 中清除掉：
+
+1. 把 **KnobControl.xcodeproj** 从项目目录中删掉。
+2. 在确认框中，选择删除引用选项。
+
+# 创建 Pod
+
+打开命令行，切换到 `KnobControl` 目录下，然后执行下面命令：
+
+    pod spec create KnobControl
+
+执行后，会在当前目录下创建一个 **KnobControl.podspec** 目录，这是一个描述项目的模版文件，包含很多通用描述和默认设置。
+
+1. 修改 `Spec Metadata` 组：
+
+    s.name         = "KnobControl"
+    s.version      = "1.0.0"
+    s.summary      = "A knob control like the UISlider, but in a circular form."
+    s.description  = "The knob control is a completely customizable widget that can be used in any iOS app. It also plays a little victory fanfare."
+    s.homepage     = "http://raywenderlich.com"
+
+2. 修改 `Spec License` 组：
+
+    s.license      = "MIT"
+
+3. 你可以根据自己的情况修改 `Author Metadata` 组的信息。
+
+4. 修改 `Platform Specifics` 组：
+
+    s.platform     = :ios, "12.0"
+
+5. 修改 `Source Location` 组（真正发布的时候，这里通常是 gitbuh 的项目地址）：
+
+    s.source       = { :path => '.' }
+
+6. 修改 `Source Code` 组：
+
+    s.source_files = "KnobControl"
+
+7. 在 `end` 上面最后一行添加：
+
+    s.swift_version = "4.2" 
+
+8. 解开所有 `#` 注释
+
+到现在你已经完成了开发版的 Podspec
+
+    Note：如果此时你用 `pod spec lint` 命令去检测 `Podspec` 此时会报错说 `source` 不是一个有效的URL，但是这不影响本地开发，等后面发布到github之后，这个问题就会消失。
+
+# 使用 Pod
+
+命令行进入 **KnobShowcase** 目录下，执行下面命令：
+
+    pod init
+
+执行之后，会悄悄生成一个 **Podfile** 文件，文件中会列出所有项目中用到的三方库。
+
+打开 **Podfile** 文件，修改内容如下：
+
+    platform :ios, '12.0'
+
+    target 'KnobShowcase' do
+    use_frameworks!
+
+    pod 'KnobControl', :path => '../KnobControl'
+
+    end
+
+    # Workaround for Cocoapods issue #7606
+    post_install do |installer|
+        installer.pods_project.build_configurations.each do |config|
+            config.build_settings.delete('CODE_SIGNING_ALLOWED')
+            config.build_settings.delete('CODE_SIGNING_REQUIRED')
+        end
+    end
+
+保存之后，在命令行中执行：
+
+    pod install
+
+这一步会安装或者更新项目中的依赖包。
+
+最后会生成一个 **KnobShowcase.xcworkspace** 文件，之后我们要用这个文件打开项目。
+
+打开 **KnobShowcase.xcworkspace** 文件。
+
+Note：当执行 `pod install` 之后，你可能会收到如下警告![](https://koenig-media.raywenderlich.com/uploads/2018/05/how-to-create-a-framework-ios-first-create-framework-warnings-2.png)
+，我们需要选择 **KnobShowcase** 根目录，然后选择 **KnobShowcase** 编译目标。选择 **Build Settings** 标签页，在搜索目录中找 **ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES**。选择之后，在弹出框中选择 **Other…** 然后修改内容为：`$(inherited)`
+重新执行 `pod install` 此时警告消失。
+
+# Pod 的组织
+
+看一下 `Pod` 项目，能看到两个targets：
+
+![](https://koenig-media.raywenderlich.com/uploads/2018/05/how-to-create-a-framework-ios-first-create-framework-pods-targets.png)
