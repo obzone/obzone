@@ -303,3 +303,11 @@ Note：当执行 `pod install` 之后，你可能会收到如下警告![](https:
 看一下 `Pod` 项目，能看到两个targets：
 
 ![](https://koenig-media.raywenderlich.com/uploads/2018/05/how-to-create-a-framework-ios-first-create-framework-pods-targets.png)
+
+* **Pods-KnobShowcase**：pod 项目，他会把所有独立的pods构建成他自己的静态库，最终合并成一个。
+* **KnobControl**：
+
+在项目的目录下，能看到很多分组，**KnobControl** 在 **Development Pods** 目录下。因为你定义这个pod的时候用了 `:path` 指向 应用的 Podfile。你可以直接修改 **KnobControl** 中的代码。
+
+![](https://koenig-media.raywenderlich.com/uploads/2018/05/how-to-create-a-framework-ios-first-create-framework-pods-structure.png)
+
