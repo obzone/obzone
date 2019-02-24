@@ -123,6 +123,8 @@ title: 为iOS开发framework静态库
 
 现在你已经添加了静态库的入口到 **Embedded Binaries** 和 **Linked Frameworks and Binaries** 中。
 
+    Note：至于**Embedded Binaries** 和 **Linked Frameworks and Binaries**分别是干什么的，请参考下面文章： https://stackoverflow.com/questions/32375687/what-is-the-difference-between-embedded-binaries-and-linked-frameworks
+
 到 **ViewController.swift** 中在文件最上面添加 
 
     import KnobControl
